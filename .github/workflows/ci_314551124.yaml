@@ -55,7 +55,6 @@ jobs:
       - name: Generate Summary
         if: always()
         run: |
-          set +e
 
           [ "$TYPE_EXIT" = "0" ] && TYPE_STATUS="Passed" || TYPE_STATUS="Failed"
           [ "$PRETTIER_EXIT" = "0" ] && PRETTIER_STATUS="Passed" || PRETTIER_STATUS="Failed"
