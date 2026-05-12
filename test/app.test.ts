@@ -29,6 +29,6 @@ describe('Fastify app', () => {
 
 describe('error test', () => {
   it('should fail', () => {
-    expect(1 + 1).toBe(3);
+    expect(1 + 1).toBe(2);
   });
 });

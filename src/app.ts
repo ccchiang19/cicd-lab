@@ -1,6 +1,6 @@
 import Fastify, { FastifyServerOptions } from 'fastify';
 
-const test_error: string = 123;
+const test_error: string = "123";
 
 export function buildApp(options: FastifyServerOptions = {}) {
   const app = Fastify({
