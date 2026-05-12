@@ -16,6 +16,7 @@ concurrency:
 jobs:
   ci-pipeline:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -36,7 +37,11 @@ jobs:
         run: npm run format:check
 
       - name: Run Tests
-        run: npm test -- --reporter=default --reporter=junit --outputFile=test-results.xml
+        run: |
+          npm test -- \
+          --reporter=default \
+          --reporter=junit \
+          --outputFile=test-results.xml
 
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
