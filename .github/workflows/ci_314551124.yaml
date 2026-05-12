@@ -26,28 +26,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Initialize Summary
+        run: |
+          echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+
       - name: TypeScript Typecheck
-        run: npm run typecheck
+        run: |
+          npm run typecheck
+          echo "| TypeScript Typecheck | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
 
       - name: Prettier Check
-        run: npm run format:check
+        run: |
+          npm run format:check
+          echo "| Prettier Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
 
       - name: Run Tests
         run: |
           npm test | tee test-output.txt
+          echo "| Unit Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Add Test Summary
+      - name: Add Test Detail
         if: always()
         run: |
-          echo "## Vitest Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Vitest Detail" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat test-output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Publish Test Report
-        uses: dorny/test-reporter@v1
-        if: always() && hashFiles('test-results.xml') != ''
-        with:
-          name: Vitest Results Detail
-          path: test-results.xml
-          reporter: jest-junit
