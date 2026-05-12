@@ -34,19 +34,33 @@ jobs:
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
 
       - name: TypeScript Typecheck
+        id: typecheck
         run: |
-          npm run typecheck
-          echo "| TypeScript Typecheck | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          if npm run typecheck; then
+            echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Typecheck | Failed |" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
 
       - name: Prettier Check
+        id: prettier
         run: |
-          npm run format:check
-          echo "| Prettier Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          if npm run format:check; then
+            echo "| Prettier | Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Prettier | Failed |" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
 
       - name: Run Tests
+        id: test
         run: |
-          npm test | tee test-output.txt
-          echo "| Unit Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          if npm test | tee test-output.txt; then
+            echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Tests | Failed |" >> $GITHUB_STEP_SUMMARY
+            exit 1
 
       - name: Add Test Detail
         if: always()
