@@ -26,70 +26,60 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 初始化 Summary
-      - name: Initialize Summary
-        run: |
-          echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+      # # 初始化 Summary
+      # - name: Initialize Summary
+      #   run: |
+      #     echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+      #     echo "|---|---|" >> $GITHUB_STEP_SUMMARY
 
       # =========================
       # TypeScript
       # =========================
       - name: TypeScript Typecheck
         run: |
-          npm run typecheck 2>&1 | tee typecheck.txt
-          EXIT_CODE=${PIPESTATUS[0]}
+          npm run typecheck 2>&1 | tee type.txt
+          echo "TYPE_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
 
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Typecheck | Failed |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### TypeScript Error" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            sed -r "s/\x1B\[[0-9;]*[mK]//g" typecheck.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      # =========================
-      # Prettier
-      # =========================
       - name: Prettier Check
         run: |
           npm run format:check 2>&1 | tee prettier.txt
-          EXIT_CODE=${PIPESTATUS[0]}
+          echo "PRETTIER_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
 
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "| Prettier | Passed |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Prettier | Failed |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Prettier Error" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            sed -r "s/\x1B\[[0-9;]*[mK]//g" prettier.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      # =========================
-      # Test
-      # =========================
       - name: Run Tests
         run: |
           npm test -- --no-color 2>&1 | tee test.txt
-          EXIT_CODE=${PIPESTATUS[0]}
+          echo "TEST_EXIT=${PIPESTATUS[0]}" >> $GITHUB_ENV
+      - name: Final Result
+        run: |
+          echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
 
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+          FAIL=0
+
+          if [ "$TYPE_EXIT" != "0" ]; then
+            echo "| Typecheck | Failed |" >> $GITHUB_STEP_SUMMARY
+            FAIL=1
           else
+            echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$PRETTIER_EXIT" != "0" ]; then
+            echo "| Prettier | Failed |" >> $GITHUB_STEP_SUMMARY
+            FAIL=1
+          else
+            echo "| Prettier | Passed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$TEST_EXIT" != "0" ]; then
             echo "| Tests | Failed |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Test Failed Output" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            sed -r "s/\x1B\[[0-9;]*[mK]//g" test.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+            FAIL=1
+          else
+            echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ $FAIL -ne 0 ]; then
             exit 1
           fi
