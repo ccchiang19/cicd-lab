@@ -56,9 +56,25 @@ jobs:
         if: always()
         run: |
 
-          [ "$TYPE_EXIT" = "0" ] && TYPE_STATUS="Passed" || TYPE_STATUS="Failed"
-          [ "$PRETTIER_EXIT" = "0" ] && PRETTIER_STATUS="Passed" || PRETTIER_STATUS="Failed"
-          [ "$TEST_EXIT" = "0" ] && TEST_STATUS="Passed" || TEST_STATUS="Failed"
+          set +e
+
+          if [ "$TYPE_EXIT" = "0" ]; then
+            TYPE_STATUS="Passed"
+          else
+            TYPE_STATUS="Failed"
+          fi
+
+          if [ "$PRETTIER_EXIT" = "0" ]; then
+            PRETTIER_STATUS="Passed"
+          else
+            PRETTIER_STATUS="Failed"
+          fi
+
+          if [ "$TEST_EXIT" = "0" ]; then
+            TEST_STATUS="Passed"
+          else
+            TEST_STATUS="Failed"
+          fi
 
           echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
