@@ -55,53 +55,44 @@ jobs:
       - name: Generate Summary
         if: always()
         run: |
+          set +e
+
+          [ "$TYPE_EXIT" = "0" ] && TYPE_STATUS="Passed" || TYPE_STATUS="Failed"
+          [ "$PRETTIER_EXIT" = "0" ] && PRETTIER_STATUS="Passed" || PRETTIER_STATUS="Failed"
+          [ "$TEST_EXIT" = "0" ] && TEST_STATUS="Passed" || TEST_STATUS="Failed"
+
           echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Typecheck | $TYPE_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Prettier | $PRETTIER_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | $TEST_STATUS |" >> $GITHUB_STEP_SUMMARY
 
-          FAIL=0
-
-          # ---------- TypeScript ----------
           if [ "$TYPE_EXIT" != "0" ]; then
-            echo "| Typecheck | Failed |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ❌ TypeScript Error" >> $GITHUB_STEP_SUMMARY
+            echo "## TypeScript Error" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             sed -r "s/\x1B\[[0-9;]*[mK]//g" type.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            FAIL=1
-          else
-            echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          # ---------- Prettier ----------
           if [ "$PRETTIER_EXIT" != "0" ]; then
-            echo "| Prettier | Failed |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ❌ Prettier Error" >> $GITHUB_STEP_SUMMARY
+            echo "## Prettier Error" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             sed -r "s/\x1B\[[0-9;]*[mK]//g" prettier.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            FAIL=1
-          else
-            echo "| Prettier | Passed |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          # ---------- Tests ----------
           if [ "$TEST_EXIT" != "0" ]; then
-            echo "| Tests | Failed |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ❌ Test Failed Output" >> $GITHUB_STEP_SUMMARY
+            echo "## Test Failed Output" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             sed -r "s/\x1B\[[0-9;]*[mK]//g" test.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            FAIL=1
-          else
-            echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          # ---------- Final ----------
-          if [ $FAIL -ne 0 ]; then
+          if [ "$TYPE_EXIT" != "0" ] || [ "$PRETTIER_EXIT" != "0" ] || [ "$TEST_EXIT" != "0" ]; then
             exit 1
           fi
