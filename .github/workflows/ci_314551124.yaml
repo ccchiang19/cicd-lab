@@ -26,6 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 初始化 Summary
       - name: Initialize Summary
         run: |
           echo "# CI Pipeline Result" >> $GITHUB_STEP_SUMMARY
@@ -33,40 +34,62 @@ jobs:
           echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
 
+      # =========================
+      # TypeScript
+      # =========================
       - name: TypeScript Typecheck
-        id: typecheck
         run: |
-          if npm run typecheck; then
+          npm run typecheck 2>&1 | tee typecheck.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          if [ $EXIT_CODE -eq 0 ]; then
             echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Typecheck | Failed |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### TypeScript Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            sed -r "s/\x1B\[[0-9;]*[mK]//g" typecheck.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
+      # =========================
+      # Prettier
+      # =========================
       - name: Prettier Check
-        id: prettier
         run: |
-          if npm run format:check; then
+          npm run format:check 2>&1 | tee prettier.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          if [ $EXIT_CODE -eq 0 ]; then
             echo "| Prettier | Passed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Prettier | Failed |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Prettier Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            sed -r "s/\x1B\[[0-9;]*[mK]//g" prettier.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
+      # =========================
+      # Test
+      # =========================
       - name: Run Tests
-        id: test
         run: |
-          if npm test | tee test-output.txt; then
+          npm test -- --no-color 2>&1 | tee test.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          if [ $EXIT_CODE -eq 0 ]; then
             echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Tests | Failed |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Test Failed Output" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            sed -r "s/\x1B\[[0-9;]*[mK]//g" test.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             exit 1
-
-      - name: Add Test Detail
-        if: always()
-        run: |
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Vitest Detail" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat test-output.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
