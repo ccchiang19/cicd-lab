@@ -5,6 +5,10 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   ci-pipeline:
     runs-on: ubuntu-latest
